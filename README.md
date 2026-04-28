@@ -36,6 +36,6 @@ ali
 • Uporabnik poskuša dodati film na seznam priljubljenih, ki je že na seznamu.
 • Sistem prikaže obvestilo, da je film že dodan na seznam.
 
-#### Primeri uporabnikov:
-admin@example.com / Admin123!
-demo@example.com / Demo123!
+#### Primer uporabnika:
+*e-pošta*: `demo@example.com`
+*geslo*: `Demo123!`
