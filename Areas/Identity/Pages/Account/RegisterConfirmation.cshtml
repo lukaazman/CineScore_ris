@@ -1,0 +1,22 @@
+@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Potrditev registracije";
+}
+
+<h1>@ViewData["Title"]</h1>
+@{
+    if (@Model.DisplayConfirmAccountLink)
+    {
+<p>
+    Aplikacija trenutno nima nastavljenega pošiljanja e-pošte. Običajno bi potrditveno povezavo prejeli po e-pošti:
+    <a id="confirm-link" href="@Model.EmailConfirmationUrl">Potrdi račun</a>
+</p>
+    }
+    else
+    {
+<p>
+        Preverite svojo e-pošto in potrdite račun.
+</p>
+    }
+}

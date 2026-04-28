@@ -1,0 +1,47 @@
+@model PagedMoviesResult
+
+@{
+    var searchQuery = Model.SearchQuery ?? string.Empty;
+    var hasResults = Model.Movies.Any();
+}
+
+<div class="text-center mb-4">
+    <h1 class="display-4">@ViewData["Heading"]</h1>
+    <p class="lead">@ViewData["Lead"]</p>
+</div>
+
+@if (!hasResults)
+{
+    <div class="alert alert-info" role="alert">
+        @(string.IsNullOrWhiteSpace(searchQuery)
+            ? "Vnesi naslov, žanr ali leto filma."
+            : $"Za izraz \"{searchQuery}\" ni bilo rezultatov.")
+    </div>
+}
+else
+{
+    <div class="row gy-4 gx-3 gx-lg-4">
+        @foreach (var movie in Model.Movies)
+        {
+            @await Html.PartialAsync("_MovieCard", new MovieCardViewModel(movie, null, false))
+        }
+    </div>
+    <nav aria-label="Strani rezultatov iskanja" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : string.Empty)">
+                <a class="page-link" asp-action="Search" asp-route-query="@searchQuery" asp-route-page="@(Model.CurrentPage - 1)">Prejšnja</a>
+            </li>
+
+            @for (var p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.CurrentPage ? "active" : string.Empty)">
+                    <a class="page-link" asp-action="Search" asp-route-query="@searchQuery" asp-route-page="@p">@p</a>
+                </li>
+            }
+
+            <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : string.Empty)">
+                <a class="page-link" asp-action="Search" asp-route-query="@searchQuery" asp-route-page="@(Model.CurrentPage + 1)">Naslednja</a>
+            </li>
+        </ul>
+    </nav>
+}

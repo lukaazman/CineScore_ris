@@ -1,0 +1,32 @@
+@model IEnumerable<User>
+
+@{
+    ViewData["Title"] = "Uporabniki";
+}
+
+<h1>Seznam uporabnikov</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Uporabniško ime</th>
+            <th>E-pošta</th>
+            <th>Telefon</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@item.UserName</td>
+            <td>@item.Email</td>
+            <td>@item.PhoneNumber</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Uredi</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Podrobnosti</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Izbriši</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

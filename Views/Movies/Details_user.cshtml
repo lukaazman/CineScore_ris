@@ -1,0 +1,324 @@
+@model Movie
+@using System
+@using System.Collections.Generic
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Podrobnosti filma";
+
+    var bannerSource = string.IsNullOrWhiteSpace(Model.BannerUrl)
+        ? Model.PosterUrl
+        : Model.BannerUrl;
+
+    var avgRating = (double)(Model.Statistika?.PovprecjeOcen ?? 0);
+    var ratingsCount = Model.Statistika?.SteviloOcen ?? 0;
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    var genres = string.IsNullOrWhiteSpace(Model.Genre)
+        ? new List<string>()
+        : Model.Genre
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(g => g.Trim())
+            .Where(g => !string.IsNullOrWhiteSpace(g))
+            .ToList();
+}
+
+<section class="movie-hero position-relative mb-4">
+    <div class="hero-overlay rounded"></div>
+
+    @if (!string.IsNullOrWhiteSpace(bannerSource))
+    {
+        <img src="@bannerSource"
+             class="img-fluid rounded w-100 hero-image"
+             alt="@($"Pasica za film {Model.Title}")"
+             onerror="this.onerror=null;this.src='@Url.Content("~/images/placeholder.jpg")';" />
+    }
+    else
+    {
+        <img src="@Url.Content("~/images/placeholder.jpg")"
+             class="img-fluid rounded w-100 hero-image"
+             alt="Slika ni na voljo"
+             onerror="this.onerror=null;this.src='@Url.Content("~/images/placeholder.jpg")';" />
+    }
+
+    <div class="hero-content text-white">
+        <h1 class="fw-bold text-uppercase mb-3">@Model.Title</h1>
+
+        @if (TempData["RatingSuccess"] is string successMessage)
+        {
+            <div class="alert alert-success mb-3">@successMessage</div>
+        }
+
+        @if (TempData["RatingError"] is string errorMessage)
+        {
+            <div class="alert alert-warning mb-3">@errorMessage</div>
+        }
+
+        @if (TempData["WatchlistSuccess"] is string watchlistSuccess)
+        {
+            <div class="alert alert-success mb-3">@watchlistSuccess</div>
+        }
+
+        @if (TempData["WatchlistInfo"] is string watchlistInfo)
+        {
+            <div class="alert alert-info mb-3">@watchlistInfo</div>
+        }
+
+        @if (TempData["WatchlistError"] is string watchlistError)
+        {
+            <div class="alert alert-warning mb-3">@watchlistError</div>
+        }
+
+        <div class="d-flex flex-wrap align-items-center gap-4 mb-3 hero-meta">
+            <span class="d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-calendar-event" viewBox="0 0 16 16">
+                    <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z" />
+                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1.5A1.5 1.5 0 0 1 16 2.5v11A1.5 1.5 0 0 1 14.5 15h-13A1.5 1.5 0 0 1 0 13.5v-11A1.5 1.5 0 0 1 1.5 1H3V.5a.5.5 0 0 1 .5-.5M1.5 2a.5.5 0 0 0-.5.5V4h14V2.5a.5.5 0 0 0-.5-.5zM15 5H1v8.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5z" />
+                </svg>
+                <span class="fw-semibold">@Model.Year</span>
+            </span>
+
+            <span class="d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
+                    <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187z" />
+                </svg>
+                <span class="fw-semibold">
+                    @if (avgRating > 0)
+                    {
+                        @(avgRating.ToString("0.0") + " / 5")
+                    }
+                    else
+                    {
+                        <span>Še brez ocen</span>
+                    }
+                </span>
+            </span>
+
+            <span class="d-flex align-items-center gap-2">
+                <span class="fw-semibold">@ratingsCount ocen</span>
+            </span>
+        </div>
+
+        @if (genres.Any())
+        {
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                @foreach (var genre in genres)
+                {
+                    <span class="badge bg-light text-dark px-3 py-2 rounded-pill shadow-sm">@genre</span>
+                }
+            </div>
+        }
+
+        <p class="lead mb-3 hero-description">@Model.Description</p>
+
+        @if (User.Identity?.IsAuthenticated ?? false)
+        {
+            <form asp-action="AddToWatchlist" method="post" class="d-inline">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-outline-light">Dodaj v seznam za ogled</button>
+            </form>
+        }
+    </div>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h4 class="card-title">Oceni film</h4>
+
+                <form asp-action="Review" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ocena</label>
+                        <div class="rating">
+                            <input type="radio" id="star5" name="rating" value="5" />
+                            <label for="star5">&#9733;</label>
+                            <input type="radio" id="star4" name="rating" value="4" />
+                            <label for="star4">&#9733;</label>
+                            <input type="radio" id="star3" name="rating" value="3" />
+                            <label for="star3">&#9733;</label>
+                            <input type="radio" id="star2" name="rating" value="2" />
+                            <label for="star2">&#9733;</label>
+                            <input type="radio" id="star1" name="rating" value="1" />
+                            <label for="star1">&#9733;</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Komentar</label>
+                        <textarea class="form-control" name="text" rows="4" placeholder="Dodaj kratek komentar o filmu."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Shrani oceno</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h4 class="card-title">Statistika filma</h4>
+                <div class="row text-center g-3 mt-1">
+                    <div class="col-md-6">
+                        <div class="rounded bg-light p-3 h-100">
+                            <div class="text-muted small">Povprečna ocena</div>
+                            <div class="display-6 fw-bold">@(avgRating > 0 ? avgRating.ToString("0.0") : "Ni ocen")</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="rounded bg-light p-3 h-100">
+                            <div class="text-muted small">Število ocen</div>
+                            <div class="display-6 fw-bold">@ratingsCount</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <h4>Komentarji</h4>
+    <hr />
+    @if (Model.Comments != null && Model.Comments.Any())
+    {
+        foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+        {
+            var likes = comment.Reactions.Count(r => r.IsLike);
+            var dislikes = comment.Reactions.Count(r => !r.IsLike);
+            var userReaction = currentUserId == null
+                ? null
+                : comment.Reactions.FirstOrDefault(r => r.UserId == currentUserId);
+
+            <div class="mb-3 p-3 border rounded bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>@(comment.User?.UserName ?? "Neznan uporabnik") @(comment.Rating)/5</strong>
+                    <div>
+                        <small class="text-muted me-2">@comment.CreatedAt.ToString("dd. MM. yyyy")</small>
+
+                        @if (currentUserId == comment.UserId)
+                        {
+                            <form asp-action="DeleteComment" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@comment.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Ali res želite izbrisati komentar?');">Izbriši</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+                <p class="mb-2">@comment.Text</p>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge text-bg-success">Všečki: @likes</span>
+                    <span class="badge text-bg-secondary">Nevšečki: @dislikes</span>
+
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <form asp-action="ReactToComment" method="post" class="d-inline">
+                            <input type="hidden" name="commentId" value="@comment.Id" />
+                            <input type="hidden" name="movieId" value="@Model.Id" />
+                            <input type="hidden" name="isLike" value="true" />
+                            <button type="submit" class="btn btn-sm @(userReaction?.IsLike == true ? "btn-success" : "btn-outline-success")">Like</button>
+                        </form>
+                        <form asp-action="ReactToComment" method="post" class="d-inline">
+                            <input type="hidden" name="commentId" value="@comment.Id" />
+                            <input type="hidden" name="movieId" value="@Model.Id" />
+                            <input type="hidden" name="isLike" value="false" />
+                            <button type="submit" class="btn btn-sm @(userReaction?.IsLike == false ? "btn-dark" : "btn-outline-dark")">Dislike</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">Za ta film še ni komentarjev.</p>
+    }
+</div>
+
+<div>
+    <a asp-action="Back">Nazaj</a>
+</div>
+
+@section Styles {
+    <style>
+        .movie-hero {
+            min-height: 540px;
+            aspect-ratio: 16 / 9;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(85%);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            right: 2rem;
+            z-index: 2;
+            max-width: 70%;
+            padding: 1rem;
+        }
+
+        .hero-description {
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-meta svg {
+            opacity: 0.9;
+        }
+
+        .rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: start;
+            gap: 0.2rem;
+        }
+
+        .rating input {
+            display: none;
+        }
+
+        .rating label {
+            font-size: 2rem;
+            color: lightgray;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .rating label:hover,
+        .rating label:hover ~ label,
+        .rating input:checked + label,
+        .rating input:checked + label ~ label {
+            color: gold;
+        }
+
+        @@media (max-width: 768px) {
+            .hero-content {
+                max-width: 100%;
+            }
+
+            .hero-image {
+                height: auto;
+            }
+
+            .movie-hero {
+                min-height: 360px;
+            }
+        }
+    </style>
+}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CineScore</title>
+    <link rel="icon" type="image/svg+xml" href="~/images/cinescore.svg" />
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/CineScore.styles.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header style="position: sticky; top: 0; z-index: 1030;">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <a class="navbar-brand cinescore-brand" asp-area="" asp-controller="Home" asp-action="Index">CineScore</a>
+                        <div class="dropdown">
+                            <button class="btn nav-menu-button d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Odpri meni">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1.5 12.5a.5.5 0 0 1 .5-.5h12a.5.5 0 0 1 0 1h-12a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h12a.5.5 0 0 1 0 1h-12a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h12a.5.5 0 0 1 0 1h-12a.5.5 0 0 1-.5-.5" />
+                                </svg>
+                                <span class="fw-semibold">Meni</span>
+                            </button>
+                            <div class="dropdown-menu shadow nav-menu-dropdown">
+                                <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">Pregled filmov</a>
+                                <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="TopRated">Najbolje ocenjeni</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        @{
+                            var currentSearchQuery = ViewData["SearchQuery"] as string ?? string.Empty;
+                        }
+                        <form id="navbarSearchForm" class="nav-search-form" asp-controller="Home" asp-action="Search" method="get" role="search">
+                            <input type="hidden" name="page" value="1" />
+                            <div class="nav-search-bar">
+                                <input id="navbarSearchInput"
+                                       name="query"
+                                       class="nav-search-input"
+                                       placeholder="Išči film"
+                                       autocomplete="off"
+                                       aria-label="Iskanje filmov"
+                                       value="@currentSearchQuery" />
+                                <button class="nav-search-button" type="submit" aria-label="Poišči">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.85-3.85zm-5.242 1.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a class="nav-link text-dark" asp-controller="Admin" asp-action="Index">Administracija</a>
+                        }
+                        <partial name="_LoginPartial" />
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - CineScore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Zasebnost</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

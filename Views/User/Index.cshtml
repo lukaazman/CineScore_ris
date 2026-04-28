@@ -1,0 +1,141 @@
+@model User
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Uporabniški profil";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var ratings = Model.Ratings != null ? Model.Ratings.OrderByDescending(r => r.CreatedAt).ToList() : new List<Rating>();
+    var watchlist = Model.WatchlistItems != null ? Model.WatchlistItems.OrderByDescending(w => w.CreatedAt).ToList() : new List<WatchlistItem>();
+}
+
+@if (TempData["ProfileSuccess"] is string profileMessage)
+{
+    <div class="alert alert-success">@profileMessage</div>
+}
+
+<div class="mb-5">
+    <h4>Uporabniški profil</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Uporabniško ime</dt>
+        <dd class="col-sm-10">@Model.UserName</dd>
+        <dt class="col-sm-2">E-pošta</dt>
+        <dd class="col-sm-10">@Model.Email</dd>
+        <dt class="col-sm-2">
+            @if (Model.Id == currentUserId)
+            {
+                <a class="btn btn-sm btn-primary" asp-action="EditProfile">Uredi profil</a>
+            }
+        </dt>
+    </dl>
+</div>
+
+<div class="mb-5">
+    <h4>Seznam za ogled</h4>
+    <hr />
+    @if (watchlist.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+        @foreach (var item in watchlist)
+        {
+            <div class="col">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex justify-content-between gap-3">
+                        <div>
+                            <div class="small text-muted">Film</div>
+                            <a asp-controller="Movies" asp-action="Details_user" asp-route-id="@item.MovieId" class="fw-semibold text-decoration-none">
+                                @(item.Movie?.Title ?? "Neznan film")
+                            </a>
+                            <div class="small text-muted mt-2">Dodano</div>
+                            <div>@item.CreatedAt.ToString("dd. MM. yyyy")</div>
+                        </div>
+                        @if (Model.Id == currentUserId)
+                        {
+                            <form asp-action="RemoveFromWatchlist" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Odstrani</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Uporabnik še nima filmov v seznamu za ogled.</p>
+    }
+</div>
+
+<div class="mb-5">
+    <h4>Oddane ocene</h4>
+    <hr />
+    @if (ratings.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+        @foreach (var rating in ratings)
+        {
+            <div class="col">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Film</div>
+                        <a asp-controller="Movies" asp-action="Details_user" asp-route-id="@rating.MovieId" class="fw-semibold text-decoration-none">
+                            @(rating.Movie?.Title ?? "Neznan film")
+                        </a>
+                        <div class="small text-muted mt-2">Ocena</div>
+                        <div class="fw-semibold">@rating.Score / 5</div>
+                        <div class="small text-muted mt-2">Datum</div>
+                        <div>@rating.CreatedAt.ToString("dd. MM. yyyy")</div>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Uporabnik še ni oddal nobene ocene.</p>
+    }
+</div>
+
+<div class="mb-5">
+    <h4>Komentarji</h4>
+    <hr />
+    @if (Model.Comments != null && Model.Comments.Any())
+    {
+        foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+        {
+            <div class="mb-3 p-3 border rounded bg-light">
+                <div class="d-flex justify-content-between gap-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <a asp-controller="Movies"
+                               asp-action="Details_user"
+                               asp-route-id="@comment.MovieId"
+                               class="fw-bold text-uppercase text-decoration-none text-dark">
+                                @((comment.Movie?.Title ?? "Neznan film").ToUpperInvariant())
+                            </a>
+                            <span class="fw-semibold">@comment.Rating/5</span>
+                        </div>
+                        <p class="mb-0 mt-1">@comment.Text</p>
+                    </div>
+                    <div class="d-flex align-items-start gap-2">
+                        <small class="text-muted">@comment.CreatedAt.ToString("dd. MM. yyyy")</small>
+                        @if (comment.UserId == currentUserId)
+                        {
+                            <form asp-controller="Movies" asp-action="DeleteComment" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@comment.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Ali res želite izbrisati komentar?');">Izbriši</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">Uporabnik še ni dodal komentarjev.</p>
+    }
+</div>

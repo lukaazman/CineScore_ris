@@ -1,0 +1,80 @@
+@model Movie
+
+@{
+    ViewData["Title"] = "Oceni film";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="mb-3">Oceni film: @Model.Title</h2>
+
+                <form asp-action="Review" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Komentar</label>
+                        <textarea class="form-control" name="text" rows="5"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold d-block">Ocena</label>
+                        <div class="rating">
+                            <input type="radio" id="star5" name="rating" value="5" />
+                            <label for="star5">&#9733;</label>
+                            <input type="radio" id="star4" name="rating" value="4" />
+                            <label for="star4">&#9733;</label>
+                            <input type="radio" id="star3" name="rating" value="3" />
+                            <label for="star3">&#9733;</label>
+                            <input type="radio" id="star2" name="rating" value="2" />
+                            <label for="star2">&#9733;</label>
+                            <input type="radio" id="star1" name="rating" value="1" />
+                            <label for="star1">&#9733;</label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Shrani oceno</button>
+                        <a class="btn btn-outline-secondary" asp-action="Details_user" asp-route-id="@Model.Id">Nazaj na film</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+.rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: left;
+}
+
+.rating input {
+    display: none;
+}
+
+.rating label {
+    font-size: 2em;
+    color: lightgray;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating label:hover,
+.rating label:hover ~ label {
+    color: gold;
+}
+
+.rating input:checked + label,
+.rating input:checked + label ~ label {
+    color: gold;
+}
+</style>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
