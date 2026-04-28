@@ -1,6 +1,7 @@
 using CineScore.Data;
 using CineScore.Models;
 using CineScore.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,33 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=CineScore.db";
+var overriddenDatabasePath = builder.Configuration["CINESCORE_DB_PATH"];
+var azureHome = Environment.GetEnvironmentVariable("HOME");
+string? dataProtectionKeysPath = null;
+
+if (!string.IsNullOrWhiteSpace(overriddenDatabasePath))
+{
+    connectionString = $"Data Source={overriddenDatabasePath}";
+}
+else if (builder.Environment.IsProduction() && !string.IsNullOrWhiteSpace(azureHome))
+{
+    var dataDirectory = Path.Combine(azureHome, "site", "data");
+    Directory.CreateDirectory(dataDirectory);
+    connectionString = $"Data Source={Path.Combine(dataDirectory, "CineScore.db")}";
+
+    dataProtectionKeysPath = Path.Combine(azureHome, "site", "data-protection-keys");
+    Directory.CreateDirectory(dataProtectionKeysPath);
+}
+
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
+
 builder.Services.AddDbContext<CineScoreContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(connectionString));
 
 builder.Services.AddDefaultIdentity<User>(options =>
     options.SignIn.RequireConfirmedAccount = false)

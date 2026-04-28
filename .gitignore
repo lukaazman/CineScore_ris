@@ -93,3 +93,11 @@ _ReSharper*/
 *.dbmdl
 *.bak
 *.backup
+
+# Local SQLite data
+CineScore.db
+CineScore.db-shm
+CineScore.db-wal
+
+# Local publish output
+publish/
