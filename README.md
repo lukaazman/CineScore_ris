@@ -42,3 +42,6 @@ ali
 #### Primer uporabnika:
 *e-pošta*: `demo@example.com`
 *geslo*: `Demo123!`
+
+#### Domena spletne aplikacije:
+[CineScore](/https://cinescore-ris-app-e7gja2h2gnbmhnat.italynorth-01.azurewebsites.net/)
